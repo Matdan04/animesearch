@@ -60,11 +60,11 @@ const SearchPage: React.FC = () => {
       {status === 'loading' && (
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5 gap-4">
           {Array.from({ length: 10 }).map((_, i) => (
-            <div key={i} className="rounded-xl overflow-hidden bg-white/5 border border-white/10 animate-pulse">
-              <div className="aspect-[2/3] bg-slate-800" />
+            <div key={i} className="rounded-xl overflow-hidden bg-white border border-slate-200 animate-pulse dark:bg-white/5 dark:border-white/10">
+              <div className="aspect-[2/3] bg-slate-200 dark:bg-slate-800" />
               <div className="p-3 space-y-2">
-                <div className="h-3 bg-slate-700 rounded w-3/4" />
-                <div className="h-3 bg-slate-700 rounded w-1/2" />
+                <div className="h-3 bg-slate-300 dark:bg-slate-700 rounded w-3/4" />
+                <div className="h-3 bg-slate-300 dark:bg-slate-700 rounded w-1/2" />
               </div>
             </div>
           ))}
@@ -72,7 +72,7 @@ const SearchPage: React.FC = () => {
       )}
 
       {showError && (
-        <div className="p-4 rounded-lg bg-red-500/10 border border-red-500/30 text-red-200">
+        <div className="p-4 rounded-lg bg-red-100 border border-red-200 text-red-700 dark:bg-red-500/10 dark:border-red-500/30 dark:text-red-200">
           {error}
         </div>
       )}
@@ -100,7 +100,7 @@ const SearchPage: React.FC = () => {
       )}
 
       {debounced.trim().length === 0 && (
-        <div className="text-center text-slate-300">
+        <div className="text-center text-slate-600 dark:text-slate-300">
           Start typing to search for anime.
         </div>
       )}
@@ -109,4 +109,3 @@ const SearchPage: React.FC = () => {
 }
 
 export default SearchPage
-

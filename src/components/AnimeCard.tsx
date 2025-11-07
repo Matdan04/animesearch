@@ -15,7 +15,7 @@ const AnimeCard: React.FC<Props> = ({ anime }) => {
   return (
     <Link
       to={`/anime/${anime.mal_id}`}
-      className="block group rounded-xl overflow-hidden bg-white/5 border border-white/10 shadow-card hover:shadow-lg hover:shadow-indigo-500/20 transition-all duration-200"
+      className="block group rounded-xl overflow-hidden bg-white border border-slate-200 shadow-card hover:shadow-lg hover:shadow-indigo-500/20 transition-all duration-200 dark:bg-white/5 dark:border-white/10"
     >
       <div className="aspect-[2/3] overflow-hidden">
         {img ? (
@@ -30,13 +30,13 @@ const AnimeCard: React.FC<Props> = ({ anime }) => {
         )}
       </div>
       <div className="p-3">
-        <h3 className="text-sm font-semibold line-clamp-2 group-hover:text-indigo-300 transition-colors">
+        <h3 className="text-sm font-semibold line-clamp-2 group-hover:text-indigo-600 dark:group-hover:text-indigo-300 transition-colors">
           {anime.title}
         </h3>
-        <div className="mt-2 text-xs text-slate-300">
+        <div className="mt-2 text-xs text-slate-600 dark:text-slate-300">
           Score: {anime.score ?? 'N/A'}
         </div>
-        <div className="mt-3 text-indigo-300 text-xs font-medium opacity-0 group-hover:opacity-100 transition-opacity">
+        <div className="mt-3 text-indigo-600 dark:text-indigo-300 text-xs font-medium opacity-0 group-hover:opacity-100 transition-opacity">
           View details →
         </div>
       </div>
@@ -45,4 +45,3 @@ const AnimeCard: React.FC<Props> = ({ anime }) => {
 }
 
 export default AnimeCard
-

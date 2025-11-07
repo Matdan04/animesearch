@@ -12,14 +12,14 @@ const SearchBar: React.FC<SearchBarProps> = ({ value, onChange, placeholder }) =
       <div className="relative">
         <input
           type="text"
-          className="w-full rounded-xl bg-white/5 border border-white/10 px-4 py-3 pl-11 text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition"
+          className="w-full rounded-xl bg-white border border-slate-300 px-4 py-3 pl-11 text-slate-900 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition dark:bg-white/5 dark:border-white/10 dark:text-white dark:placeholder-slate-400"
           value={value}
           onChange={e => onChange(e.target.value)}
           placeholder={placeholder ?? 'Search anime...'}
           autoFocus
         />
         <svg
-          className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
+          className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 dark:text-slate-400"
           width="22"
           height="22"
           viewBox="0 0 24 24"
@@ -32,4 +32,3 @@ const SearchBar: React.FC<SearchBarProps> = ({ value, onChange, placeholder }) =
   )
 }
 export default SearchBar
-
