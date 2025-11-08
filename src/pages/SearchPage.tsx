@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import SearchBar from '../components/SearchBar'
 import AnimeCard from '../components/AnimeCard'
-// import Pagination from '../components/Pagination'
+import Pagination from '../components/Pagination'
 import { useDispatch, useSelector } from 'react-redux'
 import type { AppDispatch, RootState } from '../app/store'
 import { getAnimeSearch } from '../features/anime/animeThunks'
@@ -15,18 +15,15 @@ import {
   selectSearchQuery,
   selectTrending,
   selectTrendingStatus,
-  selectLoadMoreStatus,
 } from '../features/anime/animeSlice'
 import { useDebounce } from '../hooks/useDebounce'
 import type { Anime } from '../api/animeApi'
-import { useInfiniteScroll } from '../hooks/useInfiniteScroll'
 
 const SearchPage: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>()
   const results = useSelector(selectResults)
   const pagination = useSelector(selectPagination)
   const status = useSelector(selectSearchStatus)
-  const loadMoreStatus = useSelector(selectLoadMoreStatus)
   const error = useSelector(selectError)
   const queryFromStore = useSelector(selectSearchQuery)
   const favorites = useSelector((state: RootState) => state.anime.favorites)
@@ -35,6 +32,13 @@ const SearchPage: React.FC = () => {
 
   const [query, setQuery] = useState<string>(queryFromStore)
   const debounced = useDebounce(query, 250)
+
+  // Keep local input in sync with store (e.g., when header resets search)
+  useEffect(() => {
+    if (query !== queryFromStore) {
+      setQuery(queryFromStore)
+    }
+  }, [queryFromStore])
 
   useEffect(() => {
     dispatch(setSearchQuery(query))
@@ -60,20 +64,6 @@ const SearchPage: React.FC = () => {
 
   const showEmpty = debounced.trim().length > 0 && status === 'succeeded' && results.length === 0
   const showError = status === 'failed' && error
-
-  const canLoadMore =
-    debounced.trim().length > 0 &&
-    pagination.hasNext &&
-    status !== 'loading' &&
-    loadMoreStatus !== 'loading'
-
-  const loadMore = React.useCallback(() => {
-    if (!canLoadMore) return
-    const nextPage = pagination.page + 1
-    dispatch(getAnimeSearch({ query: debounced, page: nextPage, append: true }))
-  }, [canLoadMore, pagination.page, dispatch, debounced])
-
-  const { sentinelRef } = useInfiniteScroll({ enabled: canLoadMore, onLoadMore: loadMore })
 
   return (
     <div className="space-y-6">
@@ -111,21 +101,24 @@ const SearchPage: React.FC = () => {
               <AnimeCard key={anime.mal_id} anime={anime} />
             ))}
           </div>
-          {/* Infinite scroll sentinel */}
-          <div ref={sentinelRef} className="h-10 w-full" />
-          {loadMoreStatus === 'loading' && (
-            <div className="mt-4 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5 gap-4">
-              {Array.from({ length: 5 }).map((_, i) => (
-                <div key={i} className="rounded-xl overflow-hidden bg-white border border-slate-200 animate-pulse dark:bg-white/5 dark:border-white/10">
-                  <div className="aspect-[2/3] bg-slate-200 dark:bg-slate-800" />
-                  <div className="p-3 space-y-2">
-                    <div className="h-3 bg-slate-300 dark:bg-slate-700 rounded w-3/4" />
-                    <div className="h-3 bg-slate-300 dark:bg-slate-700 rounded w-1/2" />
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
+          <Pagination
+            page={pagination.page}
+            hasNext={pagination.hasNext}
+            onPrev={() => {
+              if (pagination.page <= 1) return
+              const newPage = pagination.page - 1
+              dispatch(setPage(newPage))
+              dispatch(getAnimeSearch({ query: debounced, page: newPage }))
+              window.scrollTo({ top: 0, behavior: 'smooth' })
+            }}
+            onNext={() => {
+              if (!pagination.hasNext) return
+              const newPage = pagination.page + 1
+              dispatch(setPage(newPage))
+              dispatch(getAnimeSearch({ query: debounced, page: newPage }))
+              window.scrollTo({ top: 0, behavior: 'smooth' })
+            }}
+          />
         </>
       )}
 

@@ -61,6 +61,14 @@ const animeSlice = createSlice({
       state.detailStatus = 'idle'
       state.error = null
     },
+    resetSearch(state) {
+      state.searchQuery = ''
+      state.results = []
+      state.searchStatus = 'idle'
+      state.loadMoreStatus = 'idle'
+      state.error = null
+      state.pagination = { page: 1, perPage: 10, total: 0, hasNext: false }
+    },
     toggleFavorite(state, action: PayloadAction<Anime>) {
       const id = action.payload.mal_id
       if (state.favorites[id]) {
@@ -142,7 +150,7 @@ const animeSlice = createSlice({
   },
 })
 
-export const { setSearchQuery, setPage, clearSelected, toggleFavorite, removeFavorite } = animeSlice.actions
+export const { setSearchQuery, setPage, clearSelected, resetSearch, toggleFavorite, removeFavorite } = animeSlice.actions
 
 export const selectAnimeState = (state: RootState) => state.anime
 export const selectResults = (state: RootState) => state.anime.results
