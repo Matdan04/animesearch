@@ -1,5 +1,5 @@
 import React from 'react'
-import type { Anime } from '../features/anime/animeSlice'
+import type { Anime } from '../api/animeApi'
 import AnimeInfo from './AnimeInfo'
 import { getAnimeImageUrl } from '../utils/imageHelpers'
 
@@ -45,7 +45,7 @@ const AnimeDetailContent: React.FC<AnimeDetailContentProps> = ({ anime }) => {
                 Genres
               </div>
               <div className="flex flex-wrap gap-2">
-                {anime.genres.map(g => (
+                {anime.genres.map((g: { name: string }) => (
                   <span
                     key={g.name}
                     className="px-3 py-1 rounded-full bg-indigo-100 text-indigo-700 border border-indigo-200 text-xs dark:bg-indigo-500/10 dark:text-indigo-200 dark:border-indigo-500/20"

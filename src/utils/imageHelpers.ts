@@ -1,4 +1,4 @@
-import type { Anime } from '../features/anime/animeSlice'
+import type { Anime } from '../api/animeApi'
 
 export const getAnimeImageUrl = (anime: Anime): string => {
   return (
