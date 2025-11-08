@@ -81,5 +81,14 @@ export const fetchAnimeDetail = async (
   return res.data
 }
 
-export default api
+export const fetchTopAnime = async (
+  page = 1,
+  limit = 10,
+  signal?: AbortSignal,
+): Promise<SearchResponse> => {
+  const params = { page, limit }
+  const res = await api.get<SearchResponse>('/top/anime', { params, signal })
+  return res.data
+}
 
+export default api

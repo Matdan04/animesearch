@@ -16,6 +16,7 @@ A modern, responsive, 2-page Anime Search application built with React 18, Redux
 - Loading skeletons, empty state, and error UI
 - Mobile responsive layout
 - Optional: Favorites saved to localStorage (dark/light mode included)
+ - Trending anime on initial load (Top Anime)
 
 ## Getting Started
 
@@ -80,7 +81,7 @@ The app debounces keystrokes by 250ms and cancels any in-flight search request w
 - Favorites stored in `localStorage` (implemented)
 - Dark/Light mode toggle (implemented)
 - Infinite scroll
-- Trending anime on initial load
+- Trending anime on initial load (implemented)
 
 ## Deployment
 

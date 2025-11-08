@@ -13,6 +13,8 @@ import {
   setSearchQuery,
   setPage,
   selectSearchQuery,
+  selectTrending,
+  selectTrendingStatus,
 } from '../features/anime/animeSlice'
 import { useDebounce } from '../hooks/useDebounce'
 import type { Anime } from '../api/animeApi'
@@ -25,6 +27,8 @@ const SearchPage: React.FC = () => {
   const error = useSelector(selectError)
   const queryFromStore = useSelector(selectSearchQuery)
   const favorites = useSelector((state: RootState) => state.anime.favorites)
+  const trending = useSelector(selectTrending)
+  const trendingStatus = useSelector(selectTrendingStatus)
 
   const [query, setQuery] = useState<string>(queryFromStore)
   const debounced = useDebounce(query, 250)
@@ -38,6 +42,16 @@ const SearchPage: React.FC = () => {
     dispatch(setPage(1))
     dispatch(getAnimeSearch({ query: debounced, page: 1 }))
   }, [debounced, dispatch])
+
+  // Load trending on initial load when no query
+  useEffect(() => {
+    if (debounced.trim().length === 0 && trendingStatus === 'idle') {
+      // Lazy import to avoid circular dep; using thunk directly is fine
+      import('../features/anime/animeThunks').then(m => {
+        dispatch(m.getTrendingAnime({ page: 1 }))
+      })
+    }
+  }, [debounced, trendingStatus, dispatch])
 
   const handlePrev = () => {
     if (pagination.page <= 1) return
@@ -116,6 +130,29 @@ const SearchPage: React.FC = () => {
               </div>
             </div>
           )}
+          <div className="space-y-3">
+            <h2 className="text-lg font-semibold">Trending Now</h2>
+            {trendingStatus === 'loading' && (
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5 gap-4">
+                {Array.from({ length: 10 }).map((_, i) => (
+                  <div key={i} className="rounded-xl overflow-hidden bg-white border border-slate-200 animate-pulse dark:bg-white/5 dark:border-white/10">
+                    <div className="aspect-[2/3] bg-slate-200 dark:bg-slate-800" />
+                    <div className="p-3 space-y-2">
+                      <div className="h-3 bg-slate-300 dark:bg-slate-700 rounded w-3/4" />
+                      <div className="h-3 bg-slate-300 dark:bg-slate-700 rounded w-1/2" />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+            {trendingStatus === 'succeeded' && trending.length > 0 && (
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5 gap-4">
+                {trending.map(anime => (
+                  <AnimeCard key={anime.mal_id} anime={anime} />
+                ))}
+              </div>
+            )}
+          </div>
         </div>
       )}
     </div>

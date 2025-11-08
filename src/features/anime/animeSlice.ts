@@ -1,6 +1,6 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit'
 import type { Anime, SearchResponse, DetailResponse } from '../../api/animeApi'
-import { getAnimeDetail, getAnimeSearch } from './animeThunks'
+import { getAnimeDetail, getAnimeSearch, getTrendingAnime } from './animeThunks'
 import type { RootState } from '../../app/store'
 import { loadFavorites, type FavoritesMap } from '../../utils/storage'
 
@@ -20,6 +20,9 @@ export interface AnimeState {
   selectedAnime: Anime | null
   pagination: PaginationState
   favorites: FavoritesMap
+  trending: Anime[]
+  trendingStatus: 'idle' | 'loading' | 'succeeded' | 'failed'
+  trendingError: string | null
 }
 
 const initialState: AnimeState = {
@@ -36,6 +39,9 @@ const initialState: AnimeState = {
     hasNext: false,
   },
   favorites: loadFavorites(),
+  trending: [],
+  trendingStatus: 'idle',
+  trendingError: null,
 }
 
 const animeSlice = createSlice({
@@ -106,6 +112,19 @@ const animeSlice = createSlice({
         state.detailStatus = 'failed'
         state.error = typeof action.payload === 'string' ? action.payload : 'Unknown error'
       })
+      .addCase(getTrendingAnime.pending, state => {
+        state.trendingStatus = 'loading'
+        state.trendingError = null
+      })
+      .addCase(getTrendingAnime.fulfilled, (state, action: PayloadAction<SearchResponse>) => {
+        state.trendingStatus = 'succeeded'
+        state.trending = action.payload.data
+      })
+      .addCase(getTrendingAnime.rejected, (state, action) => {
+        if (action.payload === 'cancelled') return
+        state.trendingStatus = 'failed'
+        state.trendingError = typeof action.payload === 'string' ? action.payload : 'Unknown error'
+      })
   },
 })
 
@@ -121,5 +140,8 @@ export const selectSelectedAnime = (state: RootState) => state.anime.selectedAni
 export const selectError = (state: RootState) => state.anime.error
 export const selectFavoritesMap = (state: RootState) => state.anime.favorites
 export const selectFavoritesList = (state: RootState) => Object.values(state.anime.favorites)
+export const selectTrending = (state: RootState) => state.anime.trending
+export const selectTrendingStatus = (state: RootState) => state.anime.trendingStatus
+export const selectTrendingError = (state: RootState) => state.anime.trendingError
 
 export default animeSlice.reducer
