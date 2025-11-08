@@ -95,9 +95,9 @@ npm run build
 # deploy dist/ folder
 ```
 
-Example live URL (replace with yours after deployment):
+live URL :
 
-- https://your-anime-search-app.example.com
+- https://magenta-brigadeiros-047446.netlify.app/
 
 ## Testing (optional)
 
