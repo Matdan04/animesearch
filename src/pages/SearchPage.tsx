@@ -18,7 +18,10 @@ import {
   selectGenres,
   selectGenresStatus,
   selectSelectedGenreId,
+  selectSortOrder,
   setSelectedGenre,
+  setSortOrder,
+  resetSearch,
 } from '../features/anime/animeSlice'
 import { useDebounce } from '../hooks/useDebounce'
 import type { Anime } from '../api/animeApi'
@@ -36,6 +39,7 @@ const SearchPage: React.FC = () => {
   const genres = useSelector(selectGenres)
   const genresStatus = useSelector(selectGenresStatus)
   const selectedGenreId = useSelector(selectSelectedGenreId)
+  const sortOrder = useSelector(selectSortOrder)
 
   const [query, setQuery] = useState<string>(queryFromStore)
   const debounced = useDebounce(query, 250)
@@ -60,9 +64,22 @@ const SearchPage: React.FC = () => {
         query: debounced,
         page: 1,
         genres: selectedGenreId ? [selectedGenreId] : undefined,
+        sort: sortOrder,
       }),
     )
-  }, [debounced, selectedGenreId, dispatch])
+  }, [debounced, selectedGenreId, sortOrder, dispatch])
+
+  // When both query and genre are cleared (e.g., user clicks "All" with empty query),
+  // clear stale results so the homepage (favorites + trending) shows.
+  useEffect(() => {
+    if (
+      selectedGenreId === null &&
+      debounced.trim().length === 0 &&
+      (results.length > 0 || status !== 'idle')
+    ) {
+      dispatch(resetSearch())
+    }
+  }, [selectedGenreId, debounced, results.length, status, dispatch])
 
   // Load trending on initial load when no query
   useEffect(() => {
@@ -161,36 +178,66 @@ const SearchPage: React.FC = () => {
               <AnimeCard key={anime.mal_id} anime={anime} />
             ))}
           </div>
-          <Pagination
-            page={pagination.page}
-            hasNext={pagination.hasNext}
-            onPrev={() => {
-              if (pagination.page <= 1) return
-              const newPage = pagination.page - 1
-              dispatch(setPage(newPage))
-              dispatch(
-                getAnimeSearch({
-                  query: debounced,
-                  page: newPage,
-                  genres: selectedGenreId ? [selectedGenreId] : undefined,
-                }),
-              )
-              window.scrollTo({ top: 0, behavior: 'smooth' })
-            }}
-            onNext={() => {
-              if (!pagination.hasNext) return
-              const newPage = pagination.page + 1
-              dispatch(setPage(newPage))
-              dispatch(
-                getAnimeSearch({
-                  query: debounced,
-                  page: newPage,
-                  genres: selectedGenreId ? [selectedGenreId] : undefined,
-                }),
-              )
-              window.scrollTo({ top: 0, behavior: 'smooth' })
-            }}
-          />
+          {/* Sort + Pagination controls */}
+          <div className="flex items-center justify-between mt-4">
+            <div className="flex items-center gap-2">
+              <label htmlFor="sort" className="text-sm text-slate-600 dark:text-slate-300">Sort by rating</label>
+              <select
+                id="sort"
+                className="text-sm px-3 py-2 rounded-lg border border-slate-200 bg-white text-slate-900 dark:border-slate-300 dark:bg-white dark:text-slate-900"
+                value={sortOrder}
+                onChange={e => {
+                  const order = e.target.value === 'asc' ? 'asc' : 'desc'
+                  dispatch(setSortOrder(order))
+                  dispatch(setPage(1))
+                  dispatch(
+                    getAnimeSearch({
+                      query: debounced,
+                      page: 1,
+                      genres: selectedGenreId ? [selectedGenreId] : undefined,
+                      sort: order,
+                    }),
+                  )
+                  window.scrollTo({ top: 0, behavior: 'smooth' })
+                }}
+              >
+                <option value="desc">Highest → Lowest</option>
+                <option value="asc">Lowest → Highest</option>
+              </select>
+            </div>
+            <Pagination
+              page={pagination.page}
+              hasNext={pagination.hasNext}
+              onPrev={() => {
+                if (pagination.page <= 1) return
+                const newPage = pagination.page - 1
+                dispatch(setPage(newPage))
+                dispatch(
+                  getAnimeSearch({
+                    query: debounced,
+                    page: newPage,
+                    genres: selectedGenreId ? [selectedGenreId] : undefined,
+                    sort: sortOrder,
+                  }),
+                )
+                window.scrollTo({ top: 0, behavior: 'smooth' })
+              }}
+              onNext={() => {
+                if (!pagination.hasNext) return
+                const newPage = pagination.page + 1
+                dispatch(setPage(newPage))
+                dispatch(
+                  getAnimeSearch({
+                    query: debounced,
+                    page: newPage,
+                    genres: selectedGenreId ? [selectedGenreId] : undefined,
+                    sort: sortOrder,
+                  }),
+                )
+                window.scrollTo({ top: 0, behavior: 'smooth' })
+              }}
+            />
+          </div>
         </>
       )}
 

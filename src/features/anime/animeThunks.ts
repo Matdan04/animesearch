@@ -9,15 +9,15 @@ let trendingController: AbortController | null = null
 
 export const getAnimeSearch = createAsyncThunk<
   SearchResponse,
-  { query: string; page: number; append?: boolean; genres?: number[] },
+  { query: string; page: number; append?: boolean; genres?: number[]; sort?: 'asc' | 'desc' },
   { state: RootState; rejectValue: string }
->('anime/search', async ({ query, page, genres }, thunkAPI) => {
+>('anime/search', async ({ query, page, genres, sort }, thunkAPI) => {
   try {
     if (searchController) {
       searchController.abort()
     }
     searchController = new AbortController()
-    const data = await fetchAnimeSearch(query, page, 10, searchController.signal, genres)
+    const data = await fetchAnimeSearch(query, page, 10, searchController.signal, genres, sort)
     return data
   } catch (err) {
     if (axios.isAxiosError(err) && err.code === 'ERR_CANCELED') {

@@ -68,10 +68,15 @@ export const fetchAnimeSearch = async (
   limit = 10,
   signal?: AbortSignal,
   genres?: number[],
+  sort?: 'asc' | 'desc',
 ): Promise<SearchResponse> => {
   const params: Record<string, any> = { q: query, page, limit }
   if (genres && genres.length > 0) {
     params.genres = genres.join(',')
+  }
+  if (sort) {
+    params.order_by = 'score'
+    params.sort = sort
   }
   const res = await api.get<SearchResponse>('/anime', { params, signal })
   return res.data

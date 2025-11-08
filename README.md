@@ -17,7 +17,8 @@ A modern, responsive, 2-page Anime Search application built with React 18, Redux
 - Mobile responsive layout
 - Optional: Favorites saved to localStorage (dark/light mode included)
  - Trending anime on initial load (Top Anime)
- - Category filtering by genre (chips)
+- Category filtering by genre (chips)
+ - Sort by rating (Highest → Lowest or Lowest → Highest)
 // Infinite scroll removed; using server-side pagination controls
 
 ## Getting Started

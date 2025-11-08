@@ -28,6 +28,7 @@ export interface AnimeState {
   genresStatus: 'idle' | 'loading' | 'succeeded' | 'failed'
   genresError: string | null
   selectedGenreId: number | null
+  sortOrder: 'asc' | 'desc'
 }
 
 const initialState: AnimeState = {
@@ -52,6 +53,7 @@ const initialState: AnimeState = {
   genresStatus: 'idle',
   genresError: null,
   selectedGenreId: null,
+  sortOrder: 'desc',
 }
 
 const animeSlice = createSlice({
@@ -77,9 +79,13 @@ const animeSlice = createSlice({
       state.error = null
       state.pagination = { page: 1, perPage: 10, total: 0, hasNext: false }
       state.selectedGenreId = null
+      state.sortOrder = 'desc'
     },
     setSelectedGenre(state, action: PayloadAction<number | null>) {
       state.selectedGenreId = action.payload
+    },
+    setSortOrder(state, action: PayloadAction<'asc' | 'desc'>) {
+      state.sortOrder = action.payload
     },
     toggleFavorite(state, action: PayloadAction<Anime>) {
       const id = action.payload.mal_id
@@ -175,7 +181,7 @@ const animeSlice = createSlice({
   },
 })
 
-export const { setSearchQuery, setPage, clearSelected, resetSearch, setSelectedGenre, toggleFavorite, removeFavorite } = animeSlice.actions
+export const { setSearchQuery, setPage, clearSelected, resetSearch, setSelectedGenre, setSortOrder, toggleFavorite, removeFavorite } = animeSlice.actions
 
 export const selectAnimeState = (state: RootState) => state.anime
 export const selectResults = (state: RootState) => state.anime.results
@@ -194,5 +200,6 @@ export const selectTrendingError = (state: RootState) => state.anime.trendingErr
 export const selectGenres = (state: RootState) => state.anime.genres
 export const selectGenresStatus = (state: RootState) => state.anime.genresStatus
 export const selectSelectedGenreId = (state: RootState) => state.anime.selectedGenreId
+export const selectSortOrder = (state: RootState) => state.anime.sortOrder
 
 export default animeSlice.reducer
