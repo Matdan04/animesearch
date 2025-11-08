@@ -3,7 +3,7 @@ import SearchBar from '../components/SearchBar'
 import AnimeCard from '../components/AnimeCard'
 import Pagination from '../components/Pagination'
 import { useDispatch, useSelector } from 'react-redux'
-import type { AppDispatch } from '../app/store'
+import type { AppDispatch, RootState } from '../app/store'
 import { getAnimeSearch } from '../features/anime/animeThunks'
 import {
   selectResults,
@@ -15,6 +15,7 @@ import {
   selectSearchQuery,
 } from '../features/anime/animeSlice'
 import { useDebounce } from '../hooks/useDebounce'
+import type { Anime } from '../api/animeApi'
 
 const SearchPage: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>()
@@ -23,6 +24,7 @@ const SearchPage: React.FC = () => {
   const status = useSelector(selectSearchStatus)
   const error = useSelector(selectError)
   const queryFromStore = useSelector(selectSearchQuery)
+  const favorites = useSelector((state: RootState) => state.anime.favorites)
 
   const [query, setQuery] = useState<string>(queryFromStore)
   const debounced = useDebounce(query, 250)
@@ -100,8 +102,20 @@ const SearchPage: React.FC = () => {
       )}
 
       {debounced.trim().length === 0 && (
-        <div className="text-center text-slate-600 dark:text-slate-300">
-          Start typing to search for anime.
+        <div className="space-y-4">
+          <div className="text-center text-slate-600 dark:text-slate-300">
+            Start typing to search for anime.
+          </div>
+          {Object.keys(favorites).length > 0 && (
+            <div className="space-y-3">
+              <h2 className="text-lg font-semibold">Your Favorites</h2>
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5 gap-4">
+                {Object.values(favorites).map((anime: Anime) => (
+                  <AnimeCard key={anime.mal_id} anime={anime} />
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       )}
     </div>

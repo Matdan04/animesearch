@@ -2,6 +2,7 @@ import { createSlice, PayloadAction } from '@reduxjs/toolkit'
 import type { Anime, SearchResponse, DetailResponse } from '../../api/animeApi'
 import { getAnimeDetail, getAnimeSearch } from './animeThunks'
 import type { RootState } from '../../app/store'
+import { loadFavorites, type FavoritesMap } from '../../utils/storage'
 
 export interface PaginationState {
   page: number
@@ -18,6 +19,7 @@ export interface AnimeState {
   error: string | null
   selectedAnime: Anime | null
   pagination: PaginationState
+  favorites: FavoritesMap
 }
 
 const initialState: AnimeState = {
@@ -33,6 +35,7 @@ const initialState: AnimeState = {
     total: 0,
     hasNext: false,
   },
+  favorites: loadFavorites(),
 }
 
 const animeSlice = createSlice({
@@ -49,6 +52,17 @@ const animeSlice = createSlice({
       state.selectedAnime = null
       state.detailStatus = 'idle'
       state.error = null
+    },
+    toggleFavorite(state, action: PayloadAction<Anime>) {
+      const id = action.payload.mal_id
+      if (state.favorites[id]) {
+        delete state.favorites[id]
+      } else {
+        state.favorites[id] = action.payload
+      }
+    },
+    removeFavorite(state, action: PayloadAction<number>) {
+      delete state.favorites[action.payload]
     },
   },
   extraReducers: builder => {
@@ -95,7 +109,7 @@ const animeSlice = createSlice({
   },
 })
 
-export const { setSearchQuery, setPage, clearSelected } = animeSlice.actions
+export const { setSearchQuery, setPage, clearSelected, toggleFavorite, removeFavorite } = animeSlice.actions
 
 export const selectAnimeState = (state: RootState) => state.anime
 export const selectResults = (state: RootState) => state.anime.results
@@ -105,6 +119,7 @@ export const selectSearchStatus = (state: RootState) => state.anime.searchStatus
 export const selectDetailStatus = (state: RootState) => state.anime.detailStatus
 export const selectSelectedAnime = (state: RootState) => state.anime.selectedAnime
 export const selectError = (state: RootState) => state.anime.error
+export const selectFavoritesMap = (state: RootState) => state.anime.favorites
+export const selectFavoritesList = (state: RootState) => Object.values(state.anime.favorites)
 
 export default animeSlice.reducer
-

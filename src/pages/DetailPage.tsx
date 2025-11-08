@@ -8,6 +8,8 @@ import {
   selectSelectedAnime,
   selectError,
   clearSelected,
+  selectFavoritesMap,
+  toggleFavorite,
 } from '../features/anime/animeSlice'
 
 const DetailPage: React.FC = () => {
@@ -16,6 +18,7 @@ const DetailPage: React.FC = () => {
   const status = useSelector(selectDetailStatus)
   const anime = useSelector(selectSelectedAnime)
   const error = useSelector(selectError)
+  const favorites = useSelector(selectFavoritesMap)
   const navigate = useNavigate()
 
   useEffect(() => {
@@ -28,6 +31,9 @@ const DetailPage: React.FC = () => {
   }, [id, dispatch])
 
   const onBack = () => navigate(-1)
+  const onToggleFav = () => {
+    if (anime) dispatch(toggleFavorite(anime))
+  }
 
   if (status === 'loading' || !anime) {
     return (
@@ -61,12 +67,20 @@ const DetailPage: React.FC = () => {
 
   return (
     <div className="space-y-6 animate-fade-in">
-      <button
-        onClick={onBack}
-        className="px-4 py-2 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 transition dark:border-white/10 dark:bg-white/5 dark:hover:bg-white/10"
-      >
-        ← Back to Search
-      </button>
+      <div className="flex items-center gap-3">
+        <button
+          onClick={onBack}
+          className="px-4 py-2 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 transition dark:border-white/10 dark:bg-white/5 dark:hover:bg-white/10"
+        >
+          ← Back to Search
+        </button>
+        <button
+          onClick={onToggleFav}
+          className="px-4 py-2 rounded-lg border border-rose-200 bg-rose-50 text-rose-700 hover:bg-rose-100 transition dark:border-white/10 dark:bg-white/5 dark:text-rose-300 dark:hover:bg-white/10"
+        >
+          {anime && favorites[anime.mal_id] ? 'Remove Favorite' : 'Add to Favorites'}
+        </button>
+      </div>
 
       <h1 className="text-2xl font-bold">{anime.title}</h1>
 
