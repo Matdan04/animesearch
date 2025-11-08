@@ -1,6 +1,6 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit'
-import type { Anime, SearchResponse, DetailResponse } from '../../api/animeApi'
-import { getAnimeDetail, getAnimeSearch, getTrendingAnime } from './animeThunks'
+import type { Anime, SearchResponse, DetailResponse, Genre, GenresResponse } from '../../api/animeApi'
+import { getAnimeDetail, getAnimeSearch, getTrendingAnime, getGenres } from './animeThunks'
 import type { RootState } from '../../app/store'
 import { loadFavorites, type FavoritesMap } from '../../utils/storage'
 
@@ -24,6 +24,10 @@ export interface AnimeState {
   trending: Anime[]
   trendingStatus: 'idle' | 'loading' | 'succeeded' | 'failed'
   trendingError: string | null
+  genres: Genre[]
+  genresStatus: 'idle' | 'loading' | 'succeeded' | 'failed'
+  genresError: string | null
+  selectedGenreId: number | null
 }
 
 const initialState: AnimeState = {
@@ -44,6 +48,10 @@ const initialState: AnimeState = {
   trending: [],
   trendingStatus: 'idle',
   trendingError: null,
+  genres: [],
+  genresStatus: 'idle',
+  genresError: null,
+  selectedGenreId: null,
 }
 
 const animeSlice = createSlice({
@@ -68,6 +76,10 @@ const animeSlice = createSlice({
       state.loadMoreStatus = 'idle'
       state.error = null
       state.pagination = { page: 1, perPage: 10, total: 0, hasNext: false }
+      state.selectedGenreId = null
+    },
+    setSelectedGenre(state, action: PayloadAction<number | null>) {
+      state.selectedGenreId = action.payload
     },
     toggleFavorite(state, action: PayloadAction<Anime>) {
       const id = action.payload.mal_id
@@ -147,10 +159,23 @@ const animeSlice = createSlice({
         state.trendingStatus = 'failed'
         state.trendingError = typeof action.payload === 'string' ? action.payload : 'Unknown error'
       })
+      .addCase(getGenres.pending, state => {
+        state.genresStatus = 'loading'
+        state.genresError = null
+      })
+      .addCase(getGenres.fulfilled, (state, action: PayloadAction<GenresResponse>) => {
+        state.genresStatus = 'succeeded'
+        state.genres = action.payload.data
+      })
+      .addCase(getGenres.rejected, (state, action) => {
+        if (action.payload === 'cancelled') return
+        state.genresStatus = 'failed'
+        state.genresError = typeof action.payload === 'string' ? action.payload : 'Unknown error'
+      })
   },
 })
 
-export const { setSearchQuery, setPage, clearSelected, resetSearch, toggleFavorite, removeFavorite } = animeSlice.actions
+export const { setSearchQuery, setPage, clearSelected, resetSearch, setSelectedGenre, toggleFavorite, removeFavorite } = animeSlice.actions
 
 export const selectAnimeState = (state: RootState) => state.anime
 export const selectResults = (state: RootState) => state.anime.results
@@ -166,5 +191,8 @@ export const selectFavoritesList = (state: RootState) => Object.values(state.ani
 export const selectTrending = (state: RootState) => state.anime.trending
 export const selectTrendingStatus = (state: RootState) => state.anime.trendingStatus
 export const selectTrendingError = (state: RootState) => state.anime.trendingError
+export const selectGenres = (state: RootState) => state.anime.genres
+export const selectGenresStatus = (state: RootState) => state.anime.genresStatus
+export const selectSelectedGenreId = (state: RootState) => state.anime.selectedGenreId
 
 export default animeSlice.reducer

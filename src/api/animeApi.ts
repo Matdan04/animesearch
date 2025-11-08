@@ -67,8 +67,12 @@ export const fetchAnimeSearch = async (
   page: number,
   limit = 10,
   signal?: AbortSignal,
+  genres?: number[],
 ): Promise<SearchResponse> => {
-  const params = { q: query, page, limit }
+  const params: Record<string, any> = { q: query, page, limit }
+  if (genres && genres.length > 0) {
+    params.genres = genres.join(',')
+  }
   const res = await api.get<SearchResponse>('/anime', { params, signal })
   return res.data
 }
@@ -88,6 +92,22 @@ export const fetchTopAnime = async (
 ): Promise<SearchResponse> => {
   const params = { page, limit }
   const res = await api.get<SearchResponse>('/top/anime', { params, signal })
+  return res.data
+}
+
+export interface Genre {
+  mal_id: number
+  name: string
+  url?: string
+  count?: number
+}
+
+export interface GenresResponse {
+  data: Genre[]
+}
+
+export const fetchAnimeGenres = async (signal?: AbortSignal): Promise<GenresResponse> => {
+  const res = await api.get<GenresResponse>('/genres/anime', { signal })
   return res.data
 }
 

@@ -15,6 +15,10 @@ import {
   selectSearchQuery,
   selectTrending,
   selectTrendingStatus,
+  selectGenres,
+  selectGenresStatus,
+  selectSelectedGenreId,
+  setSelectedGenre,
 } from '../features/anime/animeSlice'
 import { useDebounce } from '../hooks/useDebounce'
 import type { Anime } from '../api/animeApi'
@@ -29,6 +33,9 @@ const SearchPage: React.FC = () => {
   const favorites = useSelector((state: RootState) => state.anime.favorites)
   const trending = useSelector(selectTrending)
   const trendingStatus = useSelector(selectTrendingStatus)
+  const genres = useSelector(selectGenres)
+  const genresStatus = useSelector(selectGenresStatus)
+  const selectedGenreId = useSelector(selectSelectedGenreId)
 
   const [query, setQuery] = useState<string>(queryFromStore)
   const debounced = useDebounce(query, 250)
@@ -45,29 +52,82 @@ const SearchPage: React.FC = () => {
   }, [query, dispatch])
 
   useEffect(() => {
-    if (debounced.trim().length === 0) return
+    // If no query and no genre selected, skip fetching
+    if (debounced.trim().length === 0 && !selectedGenreId) return
     dispatch(setPage(1))
-    dispatch(getAnimeSearch({ query: debounced, page: 1 }))
-  }, [debounced, dispatch])
+    dispatch(
+      getAnimeSearch({
+        query: debounced,
+        page: 1,
+        genres: selectedGenreId ? [selectedGenreId] : undefined,
+      }),
+    )
+  }, [debounced, selectedGenreId, dispatch])
 
   // Load trending on initial load when no query
   useEffect(() => {
-    if (debounced.trim().length === 0 && trendingStatus === 'idle') {
+    if (debounced.trim().length === 0 && !selectedGenreId && trendingStatus === 'idle') {
       // Lazy import to avoid circular dep; using thunk directly is fine
       import('../features/anime/animeThunks').then(m => {
         dispatch(m.getTrendingAnime({ page: 1 }))
       })
     }
-  }, [debounced, trendingStatus, dispatch])
+  }, [debounced, selectedGenreId, trendingStatus, dispatch])
+
+  // Load categories (genres) once
+  useEffect(() => {
+    import('../features/anime/animeThunks').then(m => dispatch(m.getGenres()))
+  }, [dispatch])
 
   // Pagination buttons are replaced by infinite scroll
 
-  const showEmpty = debounced.trim().length > 0 && status === 'succeeded' && results.length === 0
+  const showEmpty = (debounced.trim().length > 0 || selectedGenreId) && status === 'succeeded' && results.length === 0
   const showError = status === 'failed' && error
 
   return (
     <div className="space-y-6">
       <SearchBar value={query} onChange={setQuery} />
+      <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
+        <aside className="md:col-span-3">
+          <div className="rounded-xl border border-slate-200 bg-white p-3 dark:border-white/10 dark:bg-white/5 md:sticky md:top-20">
+            <div className="text-sm font-semibold mb-2">Categories</div>
+            {genresStatus === 'loading' && (
+              <div className="space-y-2">
+                {Array.from({ length: 8 }).map((_, i) => (
+                  <div key={i} className="h-8 rounded bg-slate-200 dark:bg-white/10 animate-pulse" />
+                ))}
+              </div>
+            )}
+            {genresStatus === 'succeeded' && (
+              <div className="flex flex-col gap-2">
+                <button
+                  onClick={() => dispatch(setSelectedGenre(null))}
+                  className={`text-left px-3 py-2 rounded-lg border text-sm transition ${
+                    selectedGenreId === null
+                      ? 'bg-indigo-600 text-white border-indigo-600'
+                      : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-50 dark:bg-white/5 dark:border-white/10 dark:text-slate-200'
+                  }`}
+                >
+                  All
+                </button>
+                {genres.map(g => (
+                  <button
+                    key={g.mal_id}
+                    onClick={() => dispatch(setSelectedGenre(g.mal_id))}
+                    className={`text-left px-3 py-2 rounded-lg border text-sm transition ${
+                      selectedGenreId === g.mal_id
+                        ? 'bg-indigo-600 text-white border-indigo-600'
+                        : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-50 dark:bg-white/5 dark:border-white/10 dark:text-slate-200'
+                    }`}
+                  >
+                    {g.name}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        </aside>
+        <div className="md:col-span-9 space-y-6">
       {status === 'loading' && (
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5 gap-4">
           {Array.from({ length: 10 }).map((_, i) => (
@@ -108,14 +168,26 @@ const SearchPage: React.FC = () => {
               if (pagination.page <= 1) return
               const newPage = pagination.page - 1
               dispatch(setPage(newPage))
-              dispatch(getAnimeSearch({ query: debounced, page: newPage }))
+              dispatch(
+                getAnimeSearch({
+                  query: debounced,
+                  page: newPage,
+                  genres: selectedGenreId ? [selectedGenreId] : undefined,
+                }),
+              )
               window.scrollTo({ top: 0, behavior: 'smooth' })
             }}
             onNext={() => {
               if (!pagination.hasNext) return
               const newPage = pagination.page + 1
               dispatch(setPage(newPage))
-              dispatch(getAnimeSearch({ query: debounced, page: newPage }))
+              dispatch(
+                getAnimeSearch({
+                  query: debounced,
+                  page: newPage,
+                  genres: selectedGenreId ? [selectedGenreId] : undefined,
+                }),
+              )
               window.scrollTo({ top: 0, behavior: 'smooth' })
             }}
           />
@@ -162,6 +234,8 @@ const SearchPage: React.FC = () => {
           </div>
         </div>
       )}
+        </div>
+      </div>
     </div>
   )
 }

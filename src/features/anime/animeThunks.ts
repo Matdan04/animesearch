@@ -1,5 +1,5 @@
 import { createAsyncThunk } from '@reduxjs/toolkit'
-import { fetchAnimeSearch, fetchAnimeDetail, fetchTopAnime, SearchResponse, DetailResponse } from '../../api/animeApi'
+import { fetchAnimeSearch, fetchAnimeDetail, fetchTopAnime, fetchAnimeGenres, SearchResponse, DetailResponse, GenresResponse } from '../../api/animeApi'
 import type { RootState } from '../../app/store'
 import axios from 'axios'
 
@@ -9,15 +9,15 @@ let trendingController: AbortController | null = null
 
 export const getAnimeSearch = createAsyncThunk<
   SearchResponse,
-  { query: string; page: number; append?: boolean },
+  { query: string; page: number; append?: boolean; genres?: number[] },
   { state: RootState; rejectValue: string }
->('anime/search', async ({ query, page }, thunkAPI) => {
+>('anime/search', async ({ query, page, genres }, thunkAPI) => {
   try {
     if (searchController) {
       searchController.abort()
     }
     searchController = new AbortController()
-    const data = await fetchAnimeSearch(query, page, 10, searchController.signal)
+    const data = await fetchAnimeSearch(query, page, 10, searchController.signal, genres)
     return data
   } catch (err) {
     if (axios.isAxiosError(err) && err.code === 'ERR_CANCELED') {
@@ -70,3 +70,19 @@ export const getTrendingAnime = createAsyncThunk<
     trendingController = null
   }
 })
+
+export const getGenres = createAsyncThunk<GenresResponse, void, { rejectValue: string }>(
+  'anime/genres',
+  async (_, thunkAPI) => {
+    try {
+      const controller = new AbortController()
+      const data = await fetchAnimeGenres(controller.signal)
+      return data
+    } catch (err) {
+      if (axios.isAxiosError(err) && err.code === 'ERR_CANCELED') {
+        return thunkAPI.rejectWithValue('cancelled')
+      }
+      return thunkAPI.rejectWithValue('Failed to fetch genres')
+    }
+  },
+)
