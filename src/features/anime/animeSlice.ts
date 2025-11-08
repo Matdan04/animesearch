@@ -15,6 +15,7 @@ export interface AnimeState {
   searchQuery: string
   results: Anime[]
   searchStatus: 'idle' | 'loading' | 'succeeded' | 'failed'
+  loadMoreStatus: 'idle' | 'loading' | 'failed'
   detailStatus: 'idle' | 'loading' | 'succeeded' | 'failed'
   error: string | null
   selectedAnime: Anime | null
@@ -29,6 +30,7 @@ const initialState: AnimeState = {
   searchQuery: '',
   results: [],
   searchStatus: 'idle',
+  loadMoreStatus: 'idle',
   detailStatus: 'idle',
   error: null,
   selectedAnime: null,
@@ -73,24 +75,36 @@ const animeSlice = createSlice({
   },
   extraReducers: builder => {
     builder
-      .addCase(getAnimeSearch.pending, state => {
-        state.searchStatus = 'loading'
+      .addCase(getAnimeSearch.pending, (state, action) => {
+        const append = Boolean(action.meta.arg.append)
+        if (append) state.loadMoreStatus = 'loading'
+        else state.searchStatus = 'loading'
         state.error = null
       })
       .addCase(
         getAnimeSearch.fulfilled,
         (state, action: PayloadAction<SearchResponse>) => {
+          const append = Boolean((action as any).meta.arg.append)
           state.searchStatus = 'succeeded'
-          state.results = action.payload.data
+          state.loadMoreStatus = 'idle'
+          if (append) {
+            state.results = state.results.concat(action.payload.data)
+          } else {
+            state.results = action.payload.data
+          }
           state.pagination.total = action.payload.pagination.items.total
           state.pagination.hasNext = action.payload.pagination.has_next_page
+          state.pagination.page = (action as any).meta.arg.page
         },
       )
       .addCase(getAnimeSearch.rejected, (state, action) => {
         if (action.payload === 'cancelled') {
+          state.loadMoreStatus = 'idle'
           return
         }
-        state.searchStatus = 'failed'
+        const append = Boolean((action as any).meta.arg.append)
+        if (append) state.loadMoreStatus = 'failed'
+        else state.searchStatus = 'failed'
         state.error = typeof action.payload === 'string' ? action.payload : 'Unknown error'
       })
       .addCase(getAnimeDetail.pending, state => {
@@ -135,6 +149,7 @@ export const selectResults = (state: RootState) => state.anime.results
 export const selectSearchQuery = (state: RootState) => state.anime.searchQuery
 export const selectPagination = (state: RootState) => state.anime.pagination
 export const selectSearchStatus = (state: RootState) => state.anime.searchStatus
+export const selectLoadMoreStatus = (state: RootState) => state.anime.loadMoreStatus
 export const selectDetailStatus = (state: RootState) => state.anime.detailStatus
 export const selectSelectedAnime = (state: RootState) => state.anime.selectedAnime
 export const selectError = (state: RootState) => state.anime.error

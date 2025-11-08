@@ -9,7 +9,7 @@ let trendingController: AbortController | null = null
 
 export const getAnimeSearch = createAsyncThunk<
   SearchResponse,
-  { query: string; page: number },
+  { query: string; page: number; append?: boolean },
   { state: RootState; rejectValue: string }
 >('anime/search', async ({ query, page }, thunkAPI) => {
   try {
